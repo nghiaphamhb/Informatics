@@ -1,8 +1,6 @@
 import sqlite3
 from sqlite3 import Error
 
-#tao lien ket den file database Lab4_SQLite.db
-#ham tao lien ket
 def create_connection (path):
     connection=None
     try:
@@ -11,20 +9,9 @@ def create_connection (path):
     except Error as e:
         print(f"The error '{e}' occurred")
     return connection
-#tao lien ket
+
 connection=create_connection("D:\Desktop\Lab4_Informatics\Tables\Lab4_SQLite.db")
 
-#tao bang trong database
-#ham tao bang
-def execute_query(connection, query):
-    cursor=connection.cursor()
-    try:
-        cursor.execute(query)
-        connection.commit()
-        print("Query executed successfully")
-    except Error as e:
-        print(f"The error '{e}' occurred")
-#viet cau truc cac cot trong bang va tao cac bang
 create_clients_table="""
 CREATE TABLE IF NOT EXISTS clients (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,13 +50,22 @@ CREATE TABLE IF NOT EXISTS shops (
     FOREIGN KEY (item_id) REFERENCES items (id)
 );
 """
+
+def execute_query(connection, query):
+    cursor=connection.cursor()
+    try:
+        cursor.execute(query)
+        connection.commit()
+        print("Query executed successfully")
+    except Error as e:
+        print(f"The error '{e}' occurred")
+
 execute_query(connection, create_clients_table)
 execute_query(connection, create_reviews_table)
 execute_query(connection, create_items_table)
 execute_query(connection, create_shops_table)
 
-#tao cac ban ghi va dien chung vao tables
-create_clients="""
+data_clients="""
 INSERT INTO
     clients (id, name, phone, address, item_id)
 VALUES 
@@ -82,7 +78,7 @@ VALUES
     (777, 'Biden', 123634852, 'Australia', 102),
     (888, 'Thompson', 987237653, 'Cambodia', 103);
 """
-create_reviews="""
+data_reviews="""
 INSERT INTO
     reviews (comment, rating, client_id, item_id)
 VALUES 
@@ -95,7 +91,7 @@ VALUES
     ('I wish I will have more', 3.5, 777, 102),
     ('What is this???', 1.0, 888, 103);
 """
-create_items="""
+data_items="""
 INSERT INTO
     items (id, name, price,  shop_id)
 VALUES
@@ -105,7 +101,7 @@ VALUES
     (104, 'Smart Watch', 30,  4),
     (105, 'Desk', 200,  5);
 """
-create_shops="""
+data_shops="""
 INSERT INTO
     shops (id, name, item_id)
 VALUES
@@ -116,14 +112,11 @@ VALUES
     (5, 'Destination', 105);
 """
 
-execute_query(connection, create_clients)
-execute_query(connection, create_reviews)
-execute_query(connection, create_items)
-execute_query(connection, create_shops)
+execute_query(connection, data_clients)
+execute_query(connection, data_reviews)
+execute_query(connection, data_items)
+execute_query(connection, data_shops)
 
-#-----------------------------------------------------------------------------------------------------------------------
-# trích xuất
-# viet ham doc ban ghi
 def execute_read_query (connection, query):
     cursor=connection.cursor()
     result = None
@@ -134,36 +127,21 @@ def execute_read_query (connection, query):
     except Error as e:
         print(f"The error '{e}' occurred")
 
-#trich xuat (chon va xuat ra) toan bo ban ghi tu table <clients> don gian voi SELECT
-select_clients = "SELECT * from clients"
-clients = execute_read_query(connection, select_clients)
-# print("\nAll records from tables <clients>:")
-# for client in clients:
-#     print(client)
+clients = execute_read_query(connection, "SELECT * from clients")
+reviews = execute_read_query(connection, "SELECT * from reviews")
+items = execute_read_query(connection, "SELECT * from items")
+shops = execute_read_query(connection, "SELECT * from shops")
 
-#trich xuat toan bo ban ghi tu table <reviews>
-select_reviews = "SELECT * from reviews"
-reviews = execute_read_query(connection, select_reviews)
-# print("\nAll records from tables <reviews>:")
-# for review in reviews:
-#     print(review)
+print("\nALL RECORDS FROM TABLES:")
+for client in clients: print(client)
+print("")
+for review in reviews: print(review)
+print("")
+for item in items: print(item)
+print("")
+for shop in shops: print(shop)
 
-#trich xuat toan bo ban ghi tu table <items>
-select_items = "SELECT * from items"
-items = execute_read_query(connection, select_items)
-# print("\nAll records from tables <items>:")
-# for item in items:
-#     print(item)
-
-#trich xuat toan bo ban ghi tu table <shops>
-select_shops = "SELECT * from shops"
-shops = execute_read_query(connection, select_shops)
-# print("\nAll records from tables <shops>:")
-# for shop in shops:
-#     print(shop)
-
-# viet ham trich xuat phuc tap voi JOIN
-# ten khach hang, so sao danh gia, comment
+# JOIN
 select_clients_ratings_reviews = """
 SELECT
  clients.name,
@@ -173,13 +151,12 @@ FROM
  reviews
  INNER JOIN clients ON clients.id = reviews.client_id
 """
-clients_ratings_reviews = execute_read_query(connection, select_clients_ratings_reviews)
-# print("\n")
-# for client_rating_review in clients_ratings_reviews:
-#     print(client_rating_review)
+n1 = execute_read_query(connection, select_clients_ratings_reviews)
+print("\nCLIENTS WITH THEIR RATINGS AND COMMENTS:")
+for n in n1: print(n)
 
-#ham trich xuat (chon va xuat ra) chua SELECT, WHERE va GROUP BY
-#ham dem so comment cho san pham
+#SELECT, WHERE va GROUP BY
+#1
 select_items_reviews = """
 SELECT
  name as Name_Of_Item,
@@ -192,13 +169,11 @@ WHERE
 GROUP BY
  reviews.item_id
 """
-# print("\nItems names and number of comments about them:")
-# items_reviews = execute_read_query(connection, select_items_reviews)
-# for item_review in items_reviews:
-#     print(item_review)
-
-#ham trich xuat ra cac comment co danh gia tren 4 sao
-select_comments_rating4 = """
+print("\nITEMS NAMES AND NUMBER OF COMMENTS ABOUT THEM:")
+n2 = execute_read_query(connection, select_items_reviews)
+for n in n2: print(n)
+#2
+select_comments_ratingMore4 = """
 SELECT
  comment,
  rating
@@ -207,14 +182,13 @@ FROM
 WHERE
  reviews.rating>4.0
 """
-# print("\nComments with high ratings (>4.0):")
-# comments_rating4 = execute_read_query(connection, select_comments_rating4)
-# for comment_rating4 in comments_rating4:
-#     print(comment_rating4)
+print("\nCOMMENTS WITH HIGH RATINGS (>4.0):")
+n3 = execute_read_query(connection, select_comments_ratingMore4)
+for n in n3: print(n)
 
-#ham trich xuat su dung UNION
-#trich xuat ID cua khach hang tuong ung voi ID hang hoa ma ho mua
-select_clients_reviews="""
+#UNION
+#1
+select_clientsID_reviewsID="""
 SELECT 
  id,
  item_id
@@ -227,13 +201,11 @@ SELECT
 FROM
  reviews
 """
-# print("\nThe client's ID with the ID of the item they ordered:")
-# clients_reviews = execute_read_query(connection, select_clients_reviews)
-# for client_review in clients_reviews:
-#     print(client_review)
-
-#Su dung UNION; trich xuat id client tuong ung voi id item ho mua
-select_shops_items="""
+print("\nTHE CLIENT'S ID WITH THE ID OF THE ITEM THEY ORDERED:")
+n4 = execute_read_query(connection, select_clientsID_reviewsID)
+for n in n4: print(n)
+#2
+select_shopsID_itemsID="""
 SELECT 
  id,
  item_id
@@ -246,19 +218,75 @@ SELECT
 FROM
  items
 """
-# print("\nID of the shop with ID of the items that the shop sells:")
-# shops_items = execute_read_query(connection, select_shops_items)
-# for shop_item in shops_items:
-#     print(shop_item)
+print("\nID OF THE SHOP WITH ID OF THE ITEMS THAT THE SHOP HAS:")
+n5 = execute_read_query(connection, select_shopsID_itemsID)
+for n in n5: print(n)
 
-#su dung DISTINCT
-select_item_id_reviews="""
-SELECT DISTINCT item_id, rating, comment
+#DISTINCT
+distinct_ratings_reviews="""
+SELECT DISTINCT rating
 FROM reviews;
 """
-execute_read_query(connection, select_item_id_reviews)
-# print("\nFirst review of the items:")
-# item_id_reviews = execute_read_query(connection, select_item_id_reviews)
-# for item_id_review in item_id_reviews:
-#     print(item_id_review)
+print("\nTYPES OF RATINGS ARE FOUND IN DATABASE:")
+n6 = execute_read_query(connection, distinct_ratings_reviews)
+for n in n6: print(n)
+
+# UPDATE
+#1
+cmtBeforeUpdating = execute_read_query(connection, "SELECT comment FROM reviews WHERE id = 2")
+print("\nTHE COMMENT WITH id = 2 BEFORE UPDATING:")
+for n in cmtBeforeUpdating: print(n)
+
+update_comment = """
+UPDATE
+ reviews
+SET
+ comment = "Bad product !!?"
+WHERE
+ id = 2
+"""
+execute_query(connection, update_comment)
+cmtAfterUpdating = execute_read_query(connection, "SELECT comment FROM reviews WHERE id = 2")
+print("THE COMMENT WITH id = 2 AFTER UPDATING:")
+for n in cmtAfterUpdating: print(n)
+
+#2
+priceBeforeUpdating = execute_read_query(connection, "SELECT price FROM items WHERE name = 'Sword toy' ")
+print("\nPRICE OF ITEM <Sword Toy> BEFORE UPDATING:")
+for n in priceBeforeUpdating: print(n)
+
+update_price = """
+UPDATE
+ items
+SET
+ price = 100
+WHERE
+ name = 'Sword toy'
+"""
+execute_query(connection, update_price)
+priceAfterUpdating = execute_read_query(connection, "SELECT price FROM items WHERE name = 'Sword toy' ")
+print("PRICE OF ITEM <Sword Toy> AFTER UPDATING:")
+for n in priceAfterUpdating: print(n)
+
+#DELETE
+execute_query(connection, "DELETE FROM clients WHERE id = 222")
+execute_query(connection, "DELETE FROM reviews WHERE id = 3")
+execute_query(connection, "DELETE FROM items WHERE id = 101")
+execute_query(connection, "DELETE FROM shops WHERE id = 4")
+
+print("\nALL RECORDS FROM TABLES BEFORE DELETING:")
+for client in execute_read_query(connection, "SELECT * from clients"):
+    print(client)
+print("")
+for review in execute_read_query(connection, "SELECT * from reviews"):
+    print(review)
+print("")
+for item in execute_read_query(connection, "SELECT * from items"):
+    print(item)
+print("")
+for shop in execute_read_query(connection, "SELECT * from shops"):
+    print(shop)
+
+
+
 
